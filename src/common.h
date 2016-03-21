@@ -16,6 +16,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <mm_malloc.h>
 
 #ifdef __AVX__
 #include <xmmintrin.h>

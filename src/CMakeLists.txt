@@ -11,10 +11,28 @@ set(SOURCE_FILES
     "cvwrap.cl"
 )
 
-if (WIN32)
-    set(COMPILE_FLAGS "/arch:AVX")
-else()
-    set(COMPILE_FLAGS "-mavx")
+include(CheckCSourceRuns)
+if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG )
+    set(CMAKE_REQUIRED_FLAGS "-mavx")
+    check_c_source_runs("
+        #include <immintrin.h>
+        int main()
+        {
+            __m256i a = _mm256_setzero_si256();
+            return 0;
+        }"        
+        HAVE_AVX)
+endif()
+
+if (HAVE_AVX)
+    message(STATUS "AVX CPU feature found")
+    if (WIN32)
+	message(STATUS "Enabling AVX")
+        set(COMPILE_FLAGS "/arch:AVX")
+    else()
+	message(STATUS "Enabling AVX")
+        set(COMPILE_FLAGS "-mavx")
+    endif()
 endif()
 
 find_package(Maya REQUIRED)
@@ -26,6 +44,6 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${MAYA_LIBRARIES})
 
 MAYA_PLUGIN(${PROJECT_NAME})
-install(TARGETS ${PROJECT_NAME} ${MAYA_TARGET_TYPE} DESTINATION plug-ins)
-install(FILES "cvwrap.cl" DESTINATION plug-ins)
+install(TARGETS ${PROJECT_NAME} ${MAYA_TARGET_TYPE} DESTINATION plug-ins/${MAYA_VERSION})
+install(FILES "cvwrap.cl" DESTINATION plug-ins/${MAYA_VERSION})
 
